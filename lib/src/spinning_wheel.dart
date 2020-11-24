@@ -31,6 +31,10 @@ class SpinningWheel extends StatefulWidget {
   /// default is 0.5
   final double spinResistance;
 
+  /// the velocity threshold required to trigger the animation
+  /// default is 1500
+  final double velocityThreshold;
+
   /// if true, the user can interact with the wheel while it spins
   /// default is true
   final bool canInteractWhileSpinning;
@@ -70,6 +74,7 @@ class SpinningWheel extends StatefulWidget {
     @required this.dividers,
     this.initialSpinAngle: 0.0,
     this.spinResistance: 0.5,
+    this.velocityThreshold: 1500,
     this.canInteractWhileSpinning: true,
     this.secondaryImage,
     this.secondaryImageHeight,
@@ -81,6 +86,7 @@ class SpinningWheel extends StatefulWidget {
     this.shouldStartOrStop,
   })  : assert(width > 0.0 && height > 0.0),
         assert(spinResistance > 0.0 && spinResistance <= 1.0),
+        assert(velocityThreshold > 0),
         assert(initialSpinAngle >= 0.0 && initialSpinAngle <= (2 * pi)),
         assert(secondaryImage == null ||
             (secondaryImageHeight <= height && secondaryImageWidth <= width));
@@ -218,7 +224,8 @@ class _SpinningWheelState extends State<SpinningWheel>
                     height: heightSecondaryImage,
                     width: widthSecondaryImage,
                     child: widget.secondaryImage,
-                  ))
+                  ),
+                )
               : Container(),
         ],
       ),
@@ -310,12 +317,16 @@ class _SpinningWheelState extends State<SpinningWheel>
   }
 
   void _startAnimation(Offset pixelsPerSecond) {
-    var velocity =
+    final velocity =
         _spinVelocity.getVelocity(_localPositionOnPanUpdate, pixelsPerSecond);
+    final velocityAbs = velocity.abs();
+
+    // Set velocity requirement for animation to start
+    if (velocityAbs < widget.velocityThreshold) return;
 
     _localPositionOnPanUpdate = null;
     _isBackwards = velocity < 0;
-    _initialCircularVelocity = pixelsPerSecondToRadians(velocity.abs());
+    _initialCircularVelocity = pixelsPerSecondToRadians(velocityAbs);
     _totalDuration = _motion.duration(_initialCircularVelocity);
 
     _animationController.duration =
