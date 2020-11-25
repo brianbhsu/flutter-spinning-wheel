@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_spinning_wheel/flutter_spinning_wheel.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
   SystemChrome.setEnabledSystemUIOverlays([]);
   runApp(MyApp());
 }
@@ -78,9 +80,11 @@ class MyHomePage extends StatelessWidget {
 
 class Basic extends StatelessWidget {
   final StreamController _dividerController = StreamController<int>();
+  final _wheelNotifier = StreamController<double>();
 
-  dispose() {
+  void dispose() {
     _dividerController.close();
+    _wheelNotifier.close();
   }
 
   @override
@@ -105,6 +109,17 @@ class Basic extends StatelessWidget {
                 print('FINAL RESULT: $result');
               },
               onEnd: _dividerController.add,
+              shouldStartOrStop: _wheelNotifier.stream,
+              child: GestureDetector(
+                onTap: () => _wheelNotifier.sink.add(
+                  _generateRandomVelocity(),
+                ),
+                child: Container(
+                  height: 100,
+                  width: 100,
+                  child: Image.asset('assets/images/roulette-center-300.png'),
+                ),
+              ),
             ),
             StreamBuilder(
               stream: _dividerController.stream,
@@ -116,6 +131,8 @@ class Basic extends StatelessWidget {
       ),
     );
   }
+
+  double _generateRandomVelocity() => (Random().nextDouble() * 6000) + 2000;
 
   double _generateRandomAngle() => Random().nextDouble() * pi * 2;
 }
@@ -170,10 +187,6 @@ class Roulette extends StatelessWidget {
               dividers: 8,
               onUpdate: _dividerController.add,
               onEnd: _dividerController.add,
-              secondaryImage:
-                  Image.asset('assets/images/roulette-center-300.png'),
-              secondaryImageHeight: 110,
-              secondaryImageWidth: 110,
               shouldStartOrStop: _wheelNotifier.stream,
             ),
             SizedBox(height: 30),
