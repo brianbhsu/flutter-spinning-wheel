@@ -97,10 +97,13 @@ class Basic extends StatelessWidget {
               width: 310,
               height: 310,
               initialSpinAngle: _generateRandomAngle(),
-              spinResistance: 0.6,
+              spinResistance: 0.4,
               dividers: 6,
               canInteractWhileSpinning: false,
               onUpdate: _dividerController.add,
+              onResult: (result) {
+                print('FINAL RESULT: $result');
+              },
               onEnd: _dividerController.add,
             ),
             StreamBuilder(

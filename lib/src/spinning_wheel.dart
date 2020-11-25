@@ -59,6 +59,9 @@ class SpinningWheel extends StatefulWidget {
   /// callback function to be executed when the wheel selection changes
   final Function onUpdate;
 
+  /// callback function to be executed when the result is known, before animation starts
+  final Function onResult;
+
   /// callback function to be executed when the animation stops
   final Function onEnd;
 
@@ -82,6 +85,7 @@ class SpinningWheel extends StatefulWidget {
     this.secondaryImageTop,
     this.secondaryImageLeft,
     this.onUpdate,
+    this.onResult,
     this.onEnd,
     this.shouldStartOrStop,
   })  : assert(width > 0.0 && height > 0.0),
@@ -247,7 +251,7 @@ class _SpinningWheelState extends State<SpinningWheel>
   /// returns true if (x,y) is outside the boundaries from size
   bool _contains(Offset p) => Size(widget.width, widget.height).contains(p);
 
-  // this is called just before the animation starts
+  // This is called whenever the widget is interacted with (touch, swipe, etc.)
   void _updateAnimationValues() {
     if (_animationController.isAnimating) {
       // calculate total distance covered
@@ -328,6 +332,15 @@ class _SpinningWheelState extends State<SpinningWheel>
     _isBackwards = velocity < 0;
     _initialCircularVelocity = pixelsPerSecondToRadians(velocityAbs);
     _totalDuration = _motion.duration(_initialCircularVelocity);
+
+    // Calculate final result after initial spin calculation
+    final totalDistance =
+        _motion.distance(_initialCircularVelocity, _totalDuration) *
+            (_isBackwards ? -1 : 1);
+    final modulo = _motion.modulo(totalDistance + _initialSpinAngle);
+    final finalDivider = widget.dividers - (modulo ~/ _dividerAngle);
+
+    widget.onResult(finalDivider);
 
     _animationController.duration =
         Duration(milliseconds: (_totalDuration * 1000).round());
